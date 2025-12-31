@@ -17,44 +17,25 @@
 % 节点
 % 'block'(
 %   , 'land-mine' | 'number'(.)
-%   , 'neighbor'(...)
 % )
 
-'make-board-row'(Y, X, Width, Result, This) :-
-  % 'make-board-row'(+Y, +X, +Width, -Result, +This)
-  % 创建出网格中的一行
-  % 每个节点自动获取 3x3 范围内的相邻节点
-  Width =:= 0,!, Result=[];
-  !, 
-  'get-3x3'(Y,X,This,Neighbor),
-  Result = ['block'(_,'neighbor'(Neighbor))|Rest],
-  Width_ is Width - 1,
-  X_ is X + 1,
-  'make-board-row'(Y, X_, Width_, Rest, This).
-
-'make-board'(Height, Width, Grid, This, This_height, This_width) :-
+'make-board'(Height, Width, Grid) :-
   % 'make-board'/3 的帮助函数
   % 'make-board'(+Height, +Width, -Grid, +This, +This_height, +This_width)
   Height =:= 0, !, Grid = [];
-  Y is This_height - Height + 1,
-  X is This_width - Width + 1,
-  !, 'make-board-row'(Y, X, Width, List, This),
+  !,% 'make-board-row'(Y, X, Width, List, This),
+  length(List,Width),
   Grid = [List|Rest],
   Height_ is Height - 1,
-  'make-board'(Height_,Width, Rest, This, This_height, This_width).
-
-'make-board'(Height, Width, Grid) :-
-  % 'make-board'(+Height, +Width, -Grid)
-  % 创建出 Height 行，Width 列的网格
-  'make-board'(Height, Width, Grid, Grid, Height, Width).
+  'make-board'(Height_,Width, Rest).
 
 'asign-land-mine'(N, Grid) :-
   % 'asign-land-mine'(+N, +Grid, -Result)
   % 从新生成的 Grid 中随机赋 N 个雷
   flatten(Grid, Flat_),
   'random-select-N-from-list'(N, Flat_, Mine_list, Non_mine_list),
-  maplist(['block'('land-mine',_)]>>true,Mine_list),
-  maplist(['block'('number'(_),_)]>>true,Non_mine_list).
+  maplist(['block'('land-mine')]>>true,Mine_list),
+  maplist(['block'('number'(_))]>>true,Non_mine_list).
 
 % -----
 
@@ -103,18 +84,29 @@
   maplist('draw-block',Row,X_range,Xs),
   write_ln('').
 
-'draw-block'('block'('land-mine',_),_,_) :-
+'draw-block'('block'('land-mine'),_,_) :-
   write("|_ ").
-'draw-block'('block'(number(N),_),X,X) :-
+'draw-block'('block'(number(N)),X,X) :-
   % 对节点进行绘制
   var(N), !, write("{_}");
   N = 0, !, write("{ }");
   !, writef("{%w}",[N]).
-'draw-block'('block'(number(N),_),_,_) :-
+'draw-block'('block'(number(N)),_,_) :-
   % 对节点进行绘制
   var(N), !, write("|_ ");
   N = 0, !, write(":  ");
   !, writef("|%w ",[N]).
+
+% ---------
+'uncover'(Grid,Y,X, false) :-
+  'get-board'(Y,X,Grid,'block'('land-mine')).
+'uncover'(Grid,Y,X, true) :-
+  'get-board'(Y,X,Grid,'block'('number'(N))), !,
+  'get-3x3'(Y,X,Grid,Neighbor_ls),
+  findall(Block,(member(Block, Neighbor_ls),
+                 Block='block'('land-mine')),
+          Mines),
+  length(Mines,N).
 
 main() :-
   shell('clear'),
