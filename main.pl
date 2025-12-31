@@ -83,6 +83,24 @@
   maplist('get-3'(X_center), List_, List__),
   flatten(List__,List). % 扁平化截取结果
 
+% -----
+'draw-board'(Grid) :-
+  % 对棋盘进行文本绘制
+  maplist('draw-row',Grid).
+
+'draw-row'(Row) :-
+  % 对棋盘的一行进行绘制
+  maplist('draw-block',Row),
+  write_ln('').
+
+'draw-block'('block'('land-mine',_)) :-
+  write("|_ ").
+'draw-block'('block'(number(N),_)) :-
+  % 对节点进行绘制
+  var(N), !, write("|_ ");
+  N = 0, !, write(":  ");
+  !, write("|%w ",[N]).
+
 main() :-
   shell('clear'),
   write_ln("[W/A/S/D] 移动"),
