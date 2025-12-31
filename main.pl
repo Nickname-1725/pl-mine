@@ -84,22 +84,37 @@
   flatten(List__,List). % 扁平化截取结果
 
 % -----
-'draw-board'(Grid) :-
+'draw-board'(Grid, Y, X) :-
   % 对棋盘进行文本绘制
-  maplist('draw-row',Grid).
+  % (Y, X) 是玩家坐标
+  length(Grid, Len),
+  numlist(1,Len,Y_range),
+  length(Ys, Len), maplist(=(Y),Ys),
+  length(Xs, Len), maplist(=(X),Xs),
+  maplist('draw-row',Grid,Y_range,Ys,Xs).
 
-'draw-row'(Row) :-
+'draw-row'(Row,Y_now, Y, X) :-
   % 对棋盘的一行进行绘制
-  maplist('draw-block',Row),
+  length(Row, Len),
+  numlist(1,Len,X_range),
+  length(Xs, Len),
+  (Y =:= Y_now,!,maplist(=(X),Xs);
+   maplist(=(0),Xs)),
+  maplist('draw-block',Row,X_range,Xs),
   write_ln('').
 
-'draw-block'('block'('land-mine',_)) :-
+'draw-block'('block'('land-mine',_),_,_) :-
   write("|_ ").
-'draw-block'('block'(number(N),_)) :-
+'draw-block'('block'(number(N),_),X,X) :-
+  % 对节点进行绘制
+  var(N), !, write("{_}");
+  N = 0, !, write("{ }");
+  !, writef("{%w}",[N]).
+'draw-block'('block'(number(N),_),_,_) :-
   % 对节点进行绘制
   var(N), !, write("|_ ");
   N = 0, !, write(":  ");
-  !, write("|%w ",[N]).
+  !, writef("|%w ",[N]).
 
 main() :-
   shell('clear'),
