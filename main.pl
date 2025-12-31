@@ -1,17 +1,24 @@
 
-'random-select-N-from-list'(N, From, Result) :-
-  % 'random-select-N-from-list'(+N, +From, -Result)
+'random-select-N-from-list'(N, From, Result, Rest) :-
+  % 'random-select-N-from-list'(+N, +From, -Result, -Rest)
   % 从 From 列表中随机抽取 N 个不重复元素，组成 Result 列表
-  From = [],!, Result = [];
-  N =:= 0, !, Result = [];
+  From = [],!, Result = [], Rest = [];
+  N =:= 0, !, Result = [], Rest = From;
   !, Result = [X|Result_],
   N_ is N - 1,
   random_select(X,From,From_),
-  'random-select-N-from-list'(N_, From_, Result_).
+  'random-select-N-from-list'(N_, From_, Result_, Rest).
 
+% 网格坐标
 % O|--- X
 %  |
 %  |Y
+
+% 节点
+% 'block'(
+%   , 'land-mine' | 'number'(.)
+%   , 'neighbor'(...)
+% )
 
 'make-board-row'(Y, X, Width, Result, This) :-
   % 'make-board-row'(+Y, +X, +Width, -Result, +This)
@@ -20,7 +27,7 @@
   Width =:= 0,!, Result=[];
   !, 
   'get-3x3'(Y,X,This,Neighbor),
-  Result = ['block'('open?'(_),'number'(_),'neighbor'(Neighbor))|Rest],
+  Result = ['block'(_,'neighbor'(Neighbor))|Rest],
   Width_ is Width - 1,
   X_ is X + 1,
   'make-board-row'(Y, X_, Width_, Rest, This).
@@ -40,6 +47,16 @@
   % 'make-board'(+Height, +Width, -Grid)
   % 创建出 Height 行，Width 列的网格
   'make-board'(Height, Width, Grid, Grid, Height, Width).
+
+'asign-land-mine'(N, Grid) :-
+  % 'asign-land-mine'(+N, +Grid, -Result)
+  % 从新生成的 Grid 中随机赋 N 个雷
+  flatten(Grid, Flat_),
+  'random-select-N-from-list'(N, Flat_, Mine_list, Non_mine_list),
+  maplist(['block'('land-mine',_)]>>true,Mine_list),
+  maplist(['block'('number'(_),_)]>>true,Non_mine_list).
+
+% -----
 
 'get-board'(Row,Col,Board,X) :-
   % 从网格中指定索引获取元素
