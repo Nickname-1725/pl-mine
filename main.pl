@@ -144,11 +144,11 @@
 
 main() :-
   Width = 10, Height = 10,
-  N_blocks is Width*Height, N_mines = 9,
+  N_mines = 9,
   'make-board'(Width,Height,Grid), 'asign-land-mine'(N_mines,Grid),
-  repl(Grid,1,1,[],N_blocks,N_mines).
+  repl(Grid,1,1,[],Width,Height,N_mines).
 
-repl(Grid,Y,X,Flag_ls,N_blocks,N_mines) :-
+repl(Grid,Y,X,Flag_ls,Width,Height,N_mines) :-
   shell('clear'),
   write_ln("[W/A/S/D] 移动"),
   write_ln("[U/u/Spc] 翻开"),
@@ -161,8 +161,15 @@ repl(Grid,Y,X,Flag_ls,N_blocks,N_mines) :-
    handle_State(Char,Grid,Y,X,Flag_ls, Y_, X_, Flag_ls_,Survive),
    (Survive == false,!,write_ln("死喽"),halt;
     Survive == true,!,
-    ('win?'(Grid,N_blocks,N_mines),!,write_ln("你赢了"); %
-     repl(Grid,Y_,X_,Flag_ls_,N_blocks,N_mines)))). % 下一轮 repl
+    ('win?'(Grid,Width*Height,N_mines),!,write_ln("你赢了"); %
+     % 坐标边界判断
+     (Y_ > Height,!, Y__ = Height;
+      Y_ < 1,!, Y__ = 1;
+      Y__ = Y_),
+     (X_ > Width,!, X__ = Width;
+      X_ < 1,!, X__ = 1;
+      X__ = X_),
+     repl(Grid,Y__,X__,Flag_ls_,Width,Height,N_mines)))). % 下一轮 repl
 
 handle_State('W',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y - 1.
 handle_State('w',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y - 1.
