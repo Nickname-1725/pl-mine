@@ -48,10 +48,10 @@
 
 % -----
 
-'get-board'(Row,Col,Board,X) :-
+'get-board'(Y,X,Board,Result) :-
   % 从网格中指定索引获取元素
-  nth1(Row,Board,Board_),
-  nth1(Col,Board_,X).
+  nth1(Y,Board,Board_),
+  nth1(X,Board_,Result).
 
 'get-3'(X_center, Row, List) :-
   % 从一行中截取 3 个元素（自动处理边缘情况）
@@ -114,7 +114,7 @@
   'uncover'(Grid,Survive,Block).
 
 'uncover'(_,   false,'block'('land-mine',_)).
-'uncover'(Grid,true, 'block'('number'(N),'y-x'(X,Y))) :-
+'uncover'(Grid,true, 'block'('number'(N),'y-x'(Y,X))) :-
   % 'uncover'/3
   % 'uncover'(+Grid, -Survive, +Block)
   (number(N),!,true;
