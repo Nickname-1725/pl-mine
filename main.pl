@@ -120,17 +120,18 @@
   !, writef("|%w ",[N]).
 
 % ---------
-'uncover'(Grid,Survive,Y,X) :-
-  % 'uncover'/4
-  % 'uncover'(+Grid, -Survive, +Y, +X)
+'uncover'(Grid,Survive,Flag_ls,Y,X) :-
+  % 'uncover'/5
+  % 'uncover'(+Grid, -Survive, +Flag_ls, +Y, +X)
   'get-board'(Y,X,Grid,Block), !,
-  'uncover'(Grid,Survive,Block).
+  'uncover'(Grid,Survive,Flag_ls,Block).
 
-'uncover'(_,   false,'block'('land-mine',_)).
-'uncover'(Grid,true, 'block'('number'(N),'y-x'(Y,X))) :-
-  % 'uncover'/3
-  % 'uncover'(+Grid, -Survive, +Block)
+'uncover'(_,   false,_,'block'('land-mine',_)).
+'uncover'(Grid,true,Flag_ls,'block'('number'(N),'y-x'(Y,X))) :-
+  % 'uncover'/4
+  % 'uncover'(+Grid, -Survive, +Flag_ls, +Block)
   (number(N),!,true; % 此方块已经翻开，无需操作
+   member('y-x'(Y,X),Flag_ls),!,true; % 此方块已经插旗，无需操作
    var(N),!,
    'get-3x3'(Y,X,Grid,Neighbor_ls),
    findall(Block,(member(Block, Neighbor_ls),
@@ -138,7 +139,7 @@
            Mines),
    length(Mines,N),
    (N = 0,!, % 如果周围方块无雷，继续翻开周围方块
-    'maplist'('uncover'(Grid,true),Neighbor_ls);
+    'maplist'('uncover'(Grid,true,Flag_ls),Neighbor_ls);
     true)).
 
 main() :-
@@ -170,13 +171,13 @@ handle_State('D',_   ,Y,X,Flag_ls,Y ,X_, Flag_ls,true) :- X_ is X + 1.
 handle_State('d',_   ,Y,X,Flag_ls,Y ,X_, Flag_ls,true) :- X_ is X + 1.
 handle_State(' ',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
   member('y-x'(Y,X),Flag_ls), !, Survive = true; % 已经插旗则不允许开启
-  'uncover'(Grid,Survive,Y,X).
+  'uncover'(Grid,Survive,Flag_ls,Y,X).
 handle_State('U',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
   member('y-x'(Y,X),Flag_ls), !, Survive = true;
-  'uncover'(Grid,Survive,Y,X).
+  'uncover'(Grid,Survive,Flag_ls,Y,X).
 handle_State('u',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
   member('y-x'(Y,X),Flag_ls), !, Survive = true;
-  'uncover'(Grid,Survive,Y,X).
+  'uncover'(Grid,Survive,Flag_ls,Y,X).
 handle_State('F',Grid,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
   'get-board'(Y,X,Grid,'block'('number'(N),_)), number(N), !, Flag_ls_ = Flag_ls; % 已经开放的节点不允许插旗
   select('y-x'(Y,X),Flag_ls,Flag_ls_), !; % 已经插旗的节点取消插旗
