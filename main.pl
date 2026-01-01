@@ -57,19 +57,19 @@
   % 从一行中截取 3 个元素（自动处理边缘情况）
   X_start is X_center -1,
   X_end is X_center +1,
-  findall(Element, 
-           (between(X_start, X_end, Index),
-            nth1(Index, Row, Element)),
-          List).
+  bagof(Element, 
+        Index^(between(X_start, X_end, Index),
+               nth1(Index, Row, Element)),
+        List).
 
 'get-3x3'(Y_center,X_center,Board,List) :-
   % 从网格中截取 3x3 元素（自动处理边缘 2x2、2x3 等情况）
   Y_start is Y_center -1,
   Y_end is Y_center +1,
-  findall(Element, 
-           (between(Y_start, Y_end, Index),
-            nth1(Index, Board, Element)),
-          List_),
+  bagof(Element, 
+        Index^(between(Y_start, Y_end, Index),
+               nth1(Index, Board, Element)),
+        List_),
   maplist('get-3'(X_center), List_, List__),
   flatten(List__,List). % 扁平化截取结果
 
