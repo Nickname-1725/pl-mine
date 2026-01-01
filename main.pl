@@ -16,26 +16,35 @@
 
 % 节点
 % 'block'(
-%   , 'land-mine' | 'number'(.)
+%   , 'land-mine' | 'number'(N)
+%   , 'y-x'(Y,X)
 % )
 
-'make-board'(Height, Width, Grid) :-
+'make-board'(Height, Width, Grid, Y) :-
   % 'make-board'/3 的帮助函数
-  % 'make-board'(+Height, +Width, -Grid, +This, +This_height, +This_width)
+  % 'make-board'(+Height, +Width, -Grid, +Y)
   Height =:= 0, !, Grid = [];
-  !,% 'make-board-row'(Y, X, Width, List, This),
+  !,
   length(List,Width),
+  numlist(1,Width,X_range),
+  maplist('asign-block-y-x'(Y),X_range,List),
   Grid = [List|Rest],
   Height_ is Height - 1,
-  'make-board'(Height_,Width, Rest).
+  Y_ is Y + 1,
+  'make-board'(Height_,Width, Rest, Y_).
+
+'make-board'(Height, Width, Grid) :-
+  'make-board'(Height, Width, Grid, 1).
+
+'asign-block-y-x'(Y, X, 'block'(_,'y-x'(Y,X))).
 
 'asign-land-mine'(N, Grid) :-
-  % 'asign-land-mine'(+N, +Grid, -Result)
+  % 'asign-land-mine'(+N, +Grid)
   % 从新生成的 Grid 中随机赋 N 个雷
   flatten(Grid, Flat_),
   'random-select-N-from-list'(N, Flat_, Mine_list, Non_mine_list),
-  maplist(['block'('land-mine')]>>true,Mine_list),
-  maplist(['block'('number'(_))]>>true,Non_mine_list).
+  maplist(['block'('land-mine',_)]>>true,Mine_list),
+  maplist(['block'('number'(_),_)]>>true,Non_mine_list).
 
 % -----
 
@@ -84,29 +93,42 @@
   maplist('draw-block',Row,X_range,Xs),
   write_ln('').
 
-'draw-block'('block'('land-mine'),_,_) :-
+'draw-block'('block'('land-mine',_),_,_) :-
   write("|_ ").
-'draw-block'('block'(number(N)),X,X) :-
+'draw-block'('block'(number(N),_),X,X) :-
   % 对节点进行绘制
   var(N), !, write("{_}");
   N = 0, !, write("{ }");
   !, writef("{%w}",[N]).
-'draw-block'('block'(number(N)),_,_) :-
+'draw-block'('block'(number(N),_),_,_) :-
   % 对节点进行绘制
   var(N), !, write("|_ ");
   N = 0, !, write(":  ");
   !, writef("|%w ",[N]).
 
 % ---------
-'uncover'(Grid,Y,X, false) :-
-  'get-board'(Y,X,Grid,'block'('land-mine')).
-'uncover'(Grid,Y,X, true) :-
-  'get-board'(Y,X,Grid,'block'('number'(N))), !,
-  'get-3x3'(Y,X,Grid,Neighbor_ls),
-  findall(Block,(member(Block, Neighbor_ls),
-                 Block='block'('land-mine')),
-          Mines),
-  length(Mines,N).
+'uncover'(Grid,Survive,Y,X) :-
+  % 'uncover'/4
+  % 'uncover'(+Grid, -Survive, +Y, +X)
+  'get-board'(Y,X,Grid,Block), !,
+  'uncover'(Grid,Survive,Block).
+
+'uncover'(_,   false,'block'('land-mine',_)).
+'uncover'(Grid,true, 'block'('number'(N),'y-x'(X,Y))) :-
+  % 'uncover'/3
+  % 'uncover'(+Grid, -Survive, +Block)
+  (number(N),!,true;
+   var(N),!,
+   'get-3x3'(Y,X,Grid,Neighbor_ls),
+   findall(Block,(member(Block, Neighbor_ls),
+                  Block='block'('land-mine',_)),
+           Mines),
+   length(Mines,N),
+   %write_ln(Neighbor_ls),
+   (N = 0,!,
+     'maplist'('uncover'(Grid,true),Neighbor_ls)
+    ;
+    true)).
 
 main() :-
   shell('clear'),
