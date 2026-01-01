@@ -74,33 +74,39 @@
   flatten(List__,List). % 扁平化截取结果
 
 % -----
-'draw-board'(Grid, Y, X) :-
+'draw-board'(Y, X, Grid) :-
+  % draw-board/3
+  % draw-board(Y_user, X_user, Grid)
   % 对棋盘进行文本绘制
   % (Y, X) 是玩家坐标
   length(Grid, Len),
   numlist(1,Len,Y_range),
-  length(Ys, Len), maplist(=(Y),Ys),
-  length(Xs, Len), maplist(=(X),Xs),
-  maplist('draw-row',Grid,Y_range,Ys,Xs).
+  maplist('draw-row'(Y,X),Grid,Y_range).
 
-'draw-row'(Row,Y_now, Y, X) :-
+'draw-row'(Y, X,Row,Y_now) :-
+  % draw-row/4
+  % draw-row(+Y_user, +X_user, +Row, +Y_now)
   % 对棋盘的一行进行绘制
   length(Row, Len),
   numlist(1,Len,X_range),
-  length(Xs, Len),
-  (Y =:= Y_now,!,maplist(=(X),Xs);
-   maplist(=(0),Xs)),
-  maplist('draw-block',Row,X_range,Xs),
+  (Y =:= Y_now,!,
+   maplist('draw-block'(X),X_range,Row);
+   !, 
+   maplist('draw-block'(0),X_range,Row)),
   write_ln('').
 
-'draw-block'('block'('land-mine',_),_,_) :-
+'draw-block'(X,X,'block'('land-mine',_)) :-
+  write("{_}").
+% draw-block/3
+% draw-block(+X_now, +X_user, +Block)
+'draw-block'(_,_,'block'('land-mine',_)) :-
   write("|_ ").
-'draw-block'('block'(number(N),_),X,X) :-
+'draw-block'(X,X,'block'(number(N),_)) :-
   % 对节点进行绘制
   var(N), !, write("{_}");
   N = 0, !, write("{ }");
   !, writef("{%w}",[N]).
-'draw-block'('block'(number(N),_),_,_) :-
+'draw-block'(_,_,'block'(number(N),_)) :-
   % 对节点进行绘制
   var(N), !, write("|_ ");
   N = 0, !, write(":  ");
@@ -138,7 +144,7 @@ repl(Grid,Y,X,Flag_ls) :-
   write_ln("[U/u/Spc] 翻开"),
   write_ln("[F/f] 插旗或取消标记"),
   write_ln("[Q/q] 退出"),
-  'draw-board'(Grid,Y,X),
+  'draw-board'(Y,X,Grid),
   % 获取用户输入
   get_single_char(Input),char_code(Char,Input),
   ((Char = 'Q';Char = 'q'), halt;
@@ -156,13 +162,13 @@ handle_State('s',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y + 1.
 handle_State('D',_   ,Y,X,Flag_ls,Y ,X_, Flag_ls,true) :- X_ is X + 1.
 handle_State('d',_   ,Y,X,Flag_ls,Y ,X_, Flag_ls,true) :- X_ is X + 1.
 handle_State(' ',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
-  member('y-x'(Y,X),Flag_ls), !; % 已经插旗则不允许开启
+  member('y-x'(Y,X),Flag_ls), !, Survive = true; % 已经插旗则不允许开启
   'uncover'(Grid,Survive,Y,X).
 handle_State('U',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
-  member('y-x'(Y,X),Flag_ls), !;
+  member('y-x'(Y,X),Flag_ls), !, Survive = true;
   'uncover'(Grid,Survive,Y,X).
 handle_State('u',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
-  member('y-x'(Y,X),Flag_ls), !;
+  member('y-x'(Y,X),Flag_ls), !, Survive = true;
   'uncover'(Grid,Survive,Y,X).
 handle_State('F',_,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
   select('y-x'(Y,X),Flag_ls,Flag_ls_), !;
