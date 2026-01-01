@@ -117,17 +117,15 @@
 'uncover'(Grid,true, 'block'('number'(N),'y-x'(Y,X))) :-
   % 'uncover'/3
   % 'uncover'(+Grid, -Survive, +Block)
-  (number(N),!,true;
+  (number(N),!,true; % 此方块已经翻开，无需操作
    var(N),!,
    'get-3x3'(Y,X,Grid,Neighbor_ls),
    findall(Block,(member(Block, Neighbor_ls),
                   Block='block'('land-mine',_)),
            Mines),
    length(Mines,N),
-   %write_ln(Neighbor_ls),
-   (N = 0,!,
-     'maplist'('uncover'(Grid,true),Neighbor_ls)
-    ;
+   (N = 0,!, % 如果周围方块无雷，继续翻开周围方块
+    'maplist'('uncover'(Grid,true),Neighbor_ls);
     true)).
 
 main() :-
