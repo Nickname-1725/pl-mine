@@ -27,7 +27,7 @@
   !,
   length(List,Width),
   numlist(1,Width,X_range),
-  maplist('asign-block-y-x'(Y),X_range,List),
+  maplist('assign-block-y-x'(Y),X_range,List),
   Grid = [List|Rest],
   Height_ is Height - 1,
   Y_ is Y + 1,
@@ -36,10 +36,10 @@
 'make-board'(Height, Width, Grid) :-
   'make-board'(Height, Width, Grid, 1).
 
-'asign-block-y-x'(Y, X, 'block'(_,'y-x'(Y,X))).
+'assign-block-y-x'(Y, X, 'block'(_,'y-x'(Y,X))).
 
-'asign-land-mine'(N, Grid) :-
-  % 'asign-land-mine'(+N, +Grid)
+'assign-land-mine'(N, Grid) :-
+  % 'assign-land-mine'(+N, +Grid)
   % 从新生成的 Grid 中随机赋 N 个雷
   flatten(Grid, Flat_),
   'random-select-N-from-list'(N, Flat_, Mine_list, Non_mine_list),
@@ -145,10 +145,10 @@
 main() :-
   Width = 10, Height = 10,
   N_mines = 9,
-  'make-board'(Width,Height,Grid), 'asign-land-mine'(N_mines,Grid),
-  repl(Grid,1,1,[],Width,Height,N_mines).
+  'make-board'(Height,Width,Grid), 'assign-land-mine'(N_mines,Grid),
+  repl(Grid,1,1,[],Height,Width,N_mines).
 
-repl(Grid,Y,X,Flag_ls,Width,Height,N_mines) :-
+repl(Grid,Y,X,Flag_ls,Height,Width,N_mines) :-
   shell('clear'),
   write_ln("[W/A/S/D] 移动"),
   write_ln("[U/u/Spc] 翻开"),
@@ -169,7 +169,7 @@ repl(Grid,Y,X,Flag_ls,Width,Height,N_mines) :-
      (X_ > Width,!, X__ = Width;
       X_ < 1,!, X__ = 1;
       X__ = X_),
-     repl(Grid,Y__,X__,Flag_ls_,Width,Height,N_mines)))). % 下一轮 repl
+     repl(Grid,Y__,X__,Flag_ls_,Height,Width,N_mines)))). % 下一轮 repl
 
 handle_State('W',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y - 1.
 handle_State('w',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y - 1.
