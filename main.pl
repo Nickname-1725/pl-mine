@@ -129,9 +129,45 @@
     true)).
 
 main() :-
+  'make-board'(10,10,Grid), 'asign-land-mine'(9,Grid),
+  repl(Grid,1,1,[]).
+
+repl(Grid,Y,X,Flag_ls) :-
   shell('clear'),
   write_ln("[W/A/S/D] 移动"),
   write_ln("[U/u/Spc] 翻开"),
   write_ln("[F/f] 插旗或取消标记"),
-  write_ln("[Q/q] 退出").
+  write_ln("[Q/q] 退出"),
+  'draw-board'(Grid,Y,X),
+  % 获取用户输入
+  get_single_char(Input),char_code(Char,Input),
+  ((Char = 'Q';Char = 'q'), halt;
+   handle_State(Char,Grid,Y,X,Flag_ls, Y_, X_, Flag_ls_,Survive),
+   (Survive == false,!,write_ln("死喽"),halt;
+    Survive == true,!,
+    repl(Grid,Y_,X_,Flag_ls_))).
+
+handle_State('W',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y - 1.
+handle_State('w',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y - 1.
+handle_State('A',_   ,Y,X,Flag_ls,Y ,X_, Flag_ls,true) :- X_ is X - 1.
+handle_State('a',_   ,Y,X,Flag_ls,Y ,X_, Flag_ls,true) :- X_ is X - 1.
+handle_State('S',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y + 1.
+handle_State('s',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y + 1.
+handle_State('D',_   ,Y,X,Flag_ls,Y ,X_, Flag_ls,true) :- X_ is X + 1.
+handle_State('d',_   ,Y,X,Flag_ls,Y ,X_, Flag_ls,true) :- X_ is X + 1.
+handle_State(' ',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
+  member('y-x'(Y,X),Flag_ls), !; % 已经插旗则不允许开启
+  'uncover'(Grid,Survive,Y,X).
+handle_State('U',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
+  member('y-x'(Y,X),Flag_ls), !;
+  'uncover'(Grid,Survive,Y,X).
+handle_State('u',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
+  member('y-x'(Y,X),Flag_ls), !;
+  'uncover'(Grid,Survive,Y,X).
+handle_State('F',_,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
+  select('y-x'(Y,X),Flag_ls,Flag_ls_), !;
+  Flag_ls_ = ['y-x'(Y,X)|Flag_ls].
+handle_State('f',_,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
+  select('y-x'(Y,X),Flag_ls,Flag_ls_), !;
+  Flag_ls_ = ['y-x'(Y,X)|Flag_ls].
 
