@@ -74,39 +74,46 @@
   flatten(List__,List). % 扁平化截取结果
 
 % -----
-'draw-board'(Y, X, Grid) :-
-  % draw-board/3
-  % draw-board(Y_user, X_user, Grid)
+'draw-board'(Y, X, Flag_ls, Grid) :-
+  % draw-board/4
+  % draw-board(Y_user, X_user, Flag_ls, Grid)
   % 对棋盘进行文本绘制
   % (Y, X) 是玩家坐标
   length(Grid, Len),
   numlist(1,Len,Y_range),
-  maplist('draw-row'(Y,X),Grid,Y_range).
+  maplist('draw-row'(Y,X, Flag_ls),Grid,Y_range).
 
-'draw-row'(Y, X,Row,Y_now) :-
-  % draw-row/4
-  % draw-row(+Y_user, +X_user, +Row, +Y_now)
+'draw-row'(Y, X, Flag_ls,Row,Y_now) :-
+  % draw-row/5
+  % draw-row(+Y_user, +X_user, Flag_ls, +Row, +Y_now)
   % 对棋盘的一行进行绘制
   length(Row, Len),
   numlist(1,Len,X_range),
+  findall(X_flag,(member('y-x'(Y_now,X_flag),Flag_ls)), X_Flag_ls),
   (Y =:= Y_now,!,
-   maplist('draw-block'(X),X_range,Row);
+   maplist('draw-block'(X,X_Flag_ls),X_range,Row);
    !, 
-   maplist('draw-block'(0),X_range,Row)),
+   maplist('draw-block'(0,X_Flag_ls),X_range,Row)),
   write_ln('').
 
-'draw-block'(X,X,'block'('land-mine',_)) :-
+'draw-block'(X,X_Flag_ls,X,_) :-
+  member(X,X_Flag_ls),
+  write("{F}").
+'draw-block'(_,X_Flag_ls,X,_) :-
+  member(X,X_Flag_ls),
+  write("|F ").
+'draw-block'(X,_,X,'block'('land-mine',_)) :-
   write("{_}").
-% draw-block/3
-% draw-block(+X_now, +X_user, +Block)
-'draw-block'(_,_,'block'('land-mine',_)) :-
+% draw-block/4
+% draw-block(+X_now, +X_Flag_ls, +X_user, +Block)
+'draw-block'(_,_,_,'block'('land-mine',_)) :-
   write("|_ ").
-'draw-block'(X,X,'block'(number(N),_)) :-
+'draw-block'(X,_,X,'block'(number(N),_)) :-
   % 对节点进行绘制
   var(N), !, write("{_}");
   N = 0, !, write("{ }");
   !, writef("{%w}",[N]).
-'draw-block'(_,_,'block'(number(N),_)) :-
+'draw-block'(_,_,_,'block'(number(N),_)) :-
   % 对节点进行绘制
   var(N), !, write("|_ ");
   N = 0, !, write(":  ");
@@ -144,7 +151,7 @@ repl(Grid,Y,X,Flag_ls) :-
   write_ln("[U/u/Spc] 翻开"),
   write_ln("[F/f] 插旗或取消标记"),
   write_ln("[Q/q] 退出"),
-  'draw-board'(Y,X,Grid),
+  'draw-board'(Y,X,Flag_ls,Grid),
   % 获取用户输入
   get_single_char(Input),char_code(Char,Input),
   ((Char = 'Q';Char = 'q'), halt;
