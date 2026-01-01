@@ -177,10 +177,12 @@ handle_State('U',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
 handle_State('u',Grid,Y,X,Flag_ls,Y ,X , Flag_ls,Survive) :-
   member('y-x'(Y,X),Flag_ls), !, Survive = true;
   'uncover'(Grid,Survive,Y,X).
-handle_State('F',_,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
-  select('y-x'(Y,X),Flag_ls,Flag_ls_), !;
+handle_State('F',Grid,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
+  'get-board'(Y,X,Grid,'block'('number'(N),_)), number(N), !, Flag_ls_ = Flag_ls; % 已经开放的节点不允许插旗
+  select('y-x'(Y,X),Flag_ls,Flag_ls_), !; % 已经插旗的节点取消插旗
   Flag_ls_ = ['y-x'(Y,X)|Flag_ls].
-handle_State('f',_,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
+handle_State('f',Grid,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
+  'get-board'(Y,X,Grid,'block'('number'(N),_)), number(N), !, Flag_ls_ = Flag_ls;
   select('y-x'(Y,X),Flag_ls,Flag_ls_), !;
   Flag_ls_ = ['y-x'(Y,X)|Flag_ls].
 
