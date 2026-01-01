@@ -143,10 +143,12 @@
     true)).
 
 main() :-
-  'make-board'(10,10,Grid), 'asign-land-mine'(9,Grid),
-  repl(Grid,1,1,[]).
+  Width = 10, Height = 10,
+  N_blocks is Width*Height, N_mines = 9,
+  'make-board'(Width,Height,Grid), 'asign-land-mine'(N_mines,Grid),
+  repl(Grid,1,1,[],N_blocks,N_mines).
 
-repl(Grid,Y,X,Flag_ls) :-
+repl(Grid,Y,X,Flag_ls,N_blocks,N_mines) :-
   shell('clear'),
   write_ln("[W/A/S/D] 移动"),
   write_ln("[U/u/Spc] 翻开"),
@@ -159,7 +161,8 @@ repl(Grid,Y,X,Flag_ls) :-
    handle_State(Char,Grid,Y,X,Flag_ls, Y_, X_, Flag_ls_,Survive),
    (Survive == false,!,write_ln("死喽"),halt;
     Survive == true,!,
-    repl(Grid,Y_,X_,Flag_ls_))).
+    ('win?'(Grid,N_blocks,N_mines),!,write_ln("你赢了"); %
+     repl(Grid,Y_,X_,Flag_ls_,N_blocks,N_mines)))). % 下一轮 repl
 
 handle_State('W',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y - 1.
 handle_State('w',_   ,Y,X,Flag_ls,Y_,X , Flag_ls,true) :- Y_ is Y - 1.
@@ -186,4 +189,11 @@ handle_State('f',Grid,Y,X,Flag_ls,Y ,X , Flag_ls_,true) :-
   'get-board'(Y,X,Grid,'block'('number'(N),_)), number(N), !, Flag_ls_ = Flag_ls;
   select('y-x'(Y,X),Flag_ls,Flag_ls_), !;
   Flag_ls_ = ['y-x'(Y,X)|Flag_ls].
+
+'win?'(Grid,N_blocks,N_mines) :-
+  % 胜利的条件是所有非雷块均被开启
+  flatten(Grid, List),
+  findall(N,(member('block'('number'(N),_),List),number(N)),Uncovered),
+  length(Uncovered,N),
+  N =:= N_blocks - N_mines.
 
